@@ -20,20 +20,37 @@ jobs:
         toolchain:
           - stable
           - nightly
-    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }}
+        features:
+          -
+          - --features cache
+    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.toolchain }}
-          override: true
-      - run: cargo build --release
-      - run: cargo build --examples --release
-      - run: cargo test --release
-      - run: cargo doc --release
-      - run: cargo build --release --features cache
-      - run: cargo build --examples --release --features cache
-      - run: cargo test --release --features cache
-      - run: cargo doc --release --features cache
+      - run: cargo test --release ${{ matrix.features }}
+      - run: cargo doc --release ${{ matrix.features }}
+
+  MSRV:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        toolchain:
+          - 1.69
+        features:
+          -
+          - --features cache
+    name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - run: cargo test --release --lib --bins ${{ matrix.features }}
